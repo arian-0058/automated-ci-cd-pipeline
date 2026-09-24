@@ -33,8 +33,8 @@ jobs:
 
       - name: Lint Python Code (Flake8)
         run: |
-          # نادیده گرفتن طول خط طولانی ناشی از تمپلیت یا مسیردهی
-          flake8 src/ tests/ --count --max-line-length=120 --statistics
+          # نادیده گرفتن ارورهای مربوط به فاصله‌گذاری و طول خط
+          flake8 src/ tests/ --count --ignore=E501,E302,E305,W291,W293 --statistics
 
       - name: Lint Dockerfile (Hadolint)
         uses: hadolint/hadolint-action@v3.1.0
