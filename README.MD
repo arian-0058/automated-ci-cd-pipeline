@@ -1,15 +1,5 @@
 
 ```markdown
-# 🚀 پایپ‌لاین خودکار CI/CD (پروژه ماه هفتم)
-> **Automated CI/CD Pipeline with GitHub Actions, Multi-Stage Docker, Security Scans & Mock Deployment**
-
-[![CI/CD Pipeline](https://github.com/arian-0058/automated-ci-cd-pipeline/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/arian-0058/automated-ci-cd-pipeline/actions)
-![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
-![Docker](https://img.shields.io/badge/Docker-Multi--Stage-2496ED?logo=docker)
-![Nginx](https://img.shields.io/badge/Nginx-Reverse%20Proxy-009639?logo=nginx)
-![Redis](https://img.shields.io/badge/Redis-In--Memory%20Cache-DC382D?logo=redis)
-![Security](https://img.shields.io/badge/Security-Trivy%20%7C%20Hadolint-brightgreen)
-
 این پروژه پیاده‌سازی کامل یک پایپ‌لاین یکپارچه‌سازی و استقرار مداوم (CI/CD) استاندارد، امن و تست‌محور با استفاده از **GitHub Actions** است. معماری سرویس شامل یک استک ۳ لایه‌ای (Nginx Reverse Proxy + Flask Backend + Redis Cache) بوده که به صورت کامپوز‌شده اجرا می‌شود.
 
 ---
