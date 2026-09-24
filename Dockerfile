@@ -34,9 +34,8 @@ RUN groupadd -r appgroup && useradd -r -g appgroup -s /bin/false appuser
 # انتقال پکیج‌های نصب‌شده از استیج اول
 COPY --from=builder /opt/venv /opt/venv
 
-# کپی فایل‌های برنامه و قالب HTML در مسیر مناسب
+# کپی کامل فایل‌های برنامه و تمپلیت‌ها به مسیر کار کانتینر
 COPY src/ /app/
-COPY templates/ /app/templates/
 
 # تغییر دسترسی به کاربر محدود
 RUN chown -R appuser:appgroup /app
