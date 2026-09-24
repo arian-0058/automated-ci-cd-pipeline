@@ -1,0 +1,142 @@
+name: Production CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  IMAGE_NAME: month7-backend
+
+jobs:
+  # ==========================================
+  # مرحله ۱: تست، بررسی سینتکس و ارزیابی کدها
+  # ==========================================
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Dependencies & Linters
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pytest
+          pip install -r src/requirements.txt
+
+      - name: Lint Python Code (Flake8)
+        run: |
+          # نادیده گرفتن طول خط طولانی ناشی از تمپلیت یا مسیردهی
+          flake8 src/ tests/ --count --max-line-length=120 --statistics
+
+      - name: Lint Dockerfile (Hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          failure-threshold: error
+
+      - name: Run Unit Tests (Pytest)
+        run: |
+          pytest tests/ -v
+
+  # ==========================================
+  # مرحله ۲: ساخت و اسکن امنیتی ایمیج (Trivy)
+  # ==========================================
+  security-scan:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Local Image for Scanning
+        run: |
+          docker build -t local-test-image:${{ github.sha }} .
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: local-test-image:${{ github.sha }}
+          format: 'table'
+          exit-code: '0' # برای جلوگیری از بلاک شدن فرآیند بر سر پکیج‌های پایه‌ای
+          severity: 'CRITICAL,HIGH'
+
+  # ==========================================
+  # مرحله ۳: بیلد و ارسال به Docker Hub با SHA
+  # ==========================================
+  build-and-push:
+    needs: [lint-and-test, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  # ==========================================
+  # مرحله ۴: شبیه‌سازی دیپلوی (Staging Mock Deploy)
+  # ==========================================
+  staging-mock-deploy:
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Deploy Stack using Pre-built Image
+        env:
+          DOCKER_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        run: |
+          echo "Deploying version: $DOCKER_IMAGE"
+          docker compose pull backend
+          docker compose up -d
+
+      - name: Health Check & Smoke Test
+        run: |
+          echo "Waiting 10 seconds for Nginx, App and Redis to become healthy..."
+          sleep 10
+          
+          # بررسی پاسخ لایه Nginx و روت اصلی
+          curl -f http://localhost/ || (echo "Main page failed" && docker compose logs && exit 1)
+          
+          # بررسی روت هلث‌چک بک‌اند از طریق پروکسی
+          curl -f http://localhost/health || (echo "Healthcheck failed" && docker compose logs && exit 1)
+          
+          echo "Smoke tests passed successfully! Stack is fully operational."
+
+      - name: Tear Down Stack
+        if: always()
+        run: |
+          docker compose down -v

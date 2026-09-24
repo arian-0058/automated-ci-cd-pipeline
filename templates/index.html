@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps CI/CD App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.05); }
+        }
+        .pulse-indicator {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 antialiased font-mono">
+    <div class="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-8 backdrop-blur-sm">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-5 mb-6">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-white">Month 07: CI/CD Pipeline</h1>
+                <p class="text-xs text-slate-400 mt-1">Multi-Container Microservices Architecture</p>
+            </div>
+            <div class="flex items-center gap-2 bg-emerald-950/60 border border-emerald-800/50 text-emerald-400 px-3 py-1 rounded-full text-xs font-semibold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-indicator"></span>
+                LIVE
+            </div>
+        </div>
+
+        <!-- Metric Grid -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4">
+                <span class="text-xs text-slate-400 block mb-1">Total Hits (Redis)</span>
+                <span class="text-3xl font-extrabold text-indigo-400">{{ visits }}</span>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4">
+                <span class="text-xs text-slate-400 block mb-1">Serving Container</span>
+                <span class="text-sm font-semibold text-slate-200 truncate block mt-2" title="{{ container_id }}">
+                    {{ container_id }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Service Topology Badges -->
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 mb-6">
+            <div class="text-xs text-slate-400 mb-3 uppercase tracking-wider">Active Stack Components</div>
+            <div class="flex flex-wrap gap-2 text-xs">
+                <span class="px-2.5 py-1 bg-sky-950 text-sky-400 border border-sky-800 rounded-md">Nginx Reverse Proxy</span>
+                <span class="px-2.5 py-1 bg-amber-950 text-amber-400 border border-amber-800 rounded-md">Python Flask Backend</span>
+                <span class="px-2.5 py-1 bg-red-950 text-red-400 border border-red-800 rounded-md">Redis In-Memory DB</span>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="text-center text-xs text-slate-500 border-t border-slate-800/70 pt-4">
+            Automated deployment verified via GitHub Actions
+        </div>
+    </div>
+</body>
+</html>
